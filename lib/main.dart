@@ -76,7 +76,7 @@ class _CameraExampleState extends State<CameraExample>
     final previousCameraController = controller;
     final CameraController cameraController = CameraController(
       cameraDescription,
-      ResolutionPreset.high, // Reduced from high to medium
+      ResolutionPreset.medium, // Reduced from high to medium
       imageFormatGroup: ImageFormatGroup.yuv420,
     );
 
@@ -108,7 +108,7 @@ class _CameraExampleState extends State<CameraExample>
 
   void _processCameraImage(CameraImage image) async {
     // Simple throttling: process at most one frame every 100ms
-    if (DateTime.now().difference(_lastProcessedTime).inMilliseconds < 1500) {
+    if (DateTime.now().difference(_lastProcessedTime).inMilliseconds < 200) {
       return;
     }
     _lastProcessedTime = DateTime.now();
