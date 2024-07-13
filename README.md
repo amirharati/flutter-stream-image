@@ -1,3 +1,7 @@
+## Updates (by amir, July 2024):
+base on same Idea, i was trying to to create an app that can playback the camera feed with small lag so the user can interact with the video.
+Also this approach sort of works but the number of frames per second is too small and not very useful for my application. I put this excise for later reference. 
+
 <div align="center">
 <h3 align="center">Flutter camera stream image for image Real-time detection</h3>
 </div>

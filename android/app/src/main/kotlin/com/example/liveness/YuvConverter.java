@@ -34,63 +34,39 @@ public class YuvConverter {
      * @param height  Height of given image
      * @return NV21 image byte[].
      */
-    public static byte[] YUVtoNV21 (List<byte[]> planes, int[] strides, int width, int height) {
-        Rect crop = new Rect(0, 0, width, height);
-        int format = ImageFormat.YUV_420_888;
-        byte[] data = new byte[width * height * ImageFormat.getBitsPerPixel(format) / 8];
-        byte[] rowData = new byte[strides[0]];
-        int channelOffset = 0;
-        int outputStride = 1;
-        for (int i = 0; i < planes.size(); i++) {
-            switch (i) {
-                case 0:
-                    channelOffset = 0;
-                    outputStride = 1;
-                    break;
-                case 1:
-                    channelOffset = width * height + 1;
-                    outputStride = 2;
-                    break;
-                case 2:
-                    channelOffset = width * height;
-                    outputStride = 2;
-                    break;
-            }
+       public static byte[] YUVtoNV21(List<byte[]> planes, int[] strides, int width, int height) {
+        byte[] nv21 = new byte[width * height * 3 / 2];
+        int ySize = width * height;
+        int uvSize = width * height / 4;
 
-            ByteBuffer buffer = ByteBuffer.wrap(planes.get(i));
-            int rowStride;
-            int pixelStride;
-            if(i ==0 ) {
-                rowStride = strides[i];
-                pixelStride = strides[i+1];
-            }
-            else {
-                rowStride = strides[i *2 ];
-                pixelStride = strides[i *2 +1];
-            }
-            int shift = (i == 0) ? 0 : 1;
-            int w = width >> shift;
-            int h = height >> shift;
-            buffer.position(rowStride * (crop.top >> shift) + pixelStride * (crop.left >> shift));
-            for (int row = 0; row < h; row++) {
-                int length;
-                if (pixelStride == 1 && outputStride == 1) {
-                    length = w;
-                    buffer.get(data, channelOffset, length);
-                    channelOffset += length;
-                } else {
-                    length = (w - 1) * pixelStride + 1;
-                    buffer.get(rowData, 0, length);
-                    for (int col = 0; col < w; col++) {
-                        data[channelOffset] = rowData[col * pixelStride];
-                        channelOffset += outputStride;
-                    }
-                }
-                if (row < h - 1) {
-                    buffer.position(buffer.position() + rowStride - length);
-                }
+        // Copy Y plane
+        if (planes.get(0).length >= ySize) {
+            System.arraycopy(planes.get(0), 0, nv21, 0, ySize);
+        } else {
+            // Handle the case where the Y plane is split into rows
+            int yStride = strides[0];
+            for (int row = 0; row < height; row++) {
+                System.arraycopy(planes.get(0), row * yStride, nv21, row * width, width);
             }
         }
-        return data;
+
+        // Interleave U and V planes
+        byte[] uBuffer = planes.get(1);
+        byte[] vBuffer = planes.get(2);
+        int uvStride = strides[1];
+        int uvHeight = height / 2;
+        int uvWidth = width / 2;
+
+        for (int row = 0; row < uvHeight; row++) {
+            for (int col = 0; col < uvWidth; col++) {
+                int bufferIndex = row * uvStride + col;
+                int nv21Index = ySize + row * width + col * 2;
+
+                nv21[nv21Index] = vBuffer[bufferIndex];
+                nv21[nv21Index + 1] = uBuffer[bufferIndex];
+            }
+        }
+
+        return nv21;
     }
 }
